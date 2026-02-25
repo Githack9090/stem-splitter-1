@@ -1,5 +1,6 @@
 import logging
 import psutil
+import time
 from typing import Dict
 from app.storage_manager import storage_manager
 
@@ -35,5 +36,8 @@ class TrafficMonitor:
     def is_limit_reached(self):
         """Restituisce True se abbiamo superato il limite"""
         return self.used_bytes >= self.max_bytes
+
+    def get_usage_percent(self):
+        return (self.used_bytes / self.max_bytes) * 100
 
 monitor = ResourceMonitor()
