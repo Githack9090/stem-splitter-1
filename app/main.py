@@ -105,18 +105,28 @@ async def root():
 # ============================================
 @app.get("/health")
 async def health():
-    """
-    Health check per monitoraggio
-    """
+    """Health check per monitoraggio"""
+    # Calcola RAM in modo sicuro
+    ram_mb = 0
+    try:
+        # Se resource_guard ha un metodo per ottenere RAM, usalo
+        if hasattr(resource_guard, 'get_current_ram_mb'):
+            ram_mb = resource_guard.get_current_ram_mb()
+        else:
+            # Altrimenti usa psutil direttamente
+            import psutil
+            ram_mb = psutil.virtual_memory().used / (1024 * 1024)
+    except:
+        pass  # Se fallisce, lascia 0
+    
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "resources": {
             "current_requests": resource_guard.current_requests,
-            "ram_usage_mb": resource_guard.get_current_ram_usage() if hasattr(resource_guard, 'get_current_ram_usage') else 0
+            "ram_mb": ram_mb
         }
     }
-
 # ============================================
 # ENDPOINT: SEPARAZIONE AUDIO
 # ============================================
@@ -232,12 +242,21 @@ async def separate_audio(file: UploadFile = File(...)):
 # ============================================
 @app.get("/admin/metrics")
 async def get_metrics():
-    """
-    Metriche dettagliate del sistema (solo per admin)
-    """
+    """Metriche dettagliate del sistema (solo per admin)"""
+    # Calcola RAM in modo sicuro
+    ram_mb = 0
+    try:
+        if hasattr(resource_guard, 'get_current_ram_mb'):
+            ram_mb = resource_guard.get_current_ram_mb()
+        else:
+            import psutil
+            ram_mb = psutil.virtual_memory().used / (1024 * 1024)
+    except:
+        pass
+    
     return {
         "current": {
-            "ram_mb": resource_guard.get_current_ram_usage() if hasattr(resource_guard, 'get_current_ram_usage') else 0,
+            "ram_mb": ram_mb,
             "concurrent_requests": resource_guard.current_requests,
             "storage_mb": storage_manager.get_current_usage()
         },
